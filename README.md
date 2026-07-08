@@ -43,4 +43,9 @@ CAlcool è un'applicazione mobile sviluppata in Flutter per il calcolo algoritmi
 
 ---
 
+## Per build iOS se non dotati di sistema macOS
+https://codemagic.io/
+
+---
+
 > **DISCLAIMER MEDICO:** *Questa app fornisce stime matematiche basate su formule standard. Non ha alcuna valenza medico-legale e non sostituisce un etilometro reale. Non guidare mai dopo aver bevuto.*

@@ -43,8 +43,42 @@ CAlcool è un'applicazione mobile sviluppata in Flutter per il calcolo algoritmi
 
 ---
 
-## Per build iOS se non dotati di sistema macOS
-https://codemagic.io/
+## 🛠️ Come Compilare l'App (Build)
+
+### Compilare per Android (.apk)
+Per generare il file di installazione per Android, è sufficiente utilizzare gli strumenti locali da riga di comando se si ha installato l'SDK di Flutter:
+
+1. Apri il terminale nella cartella del progetto (`CAlcool`).
+2. Esegui il comando:
+   ```bash
+   flutter build apk --release
+   ```
+3. Attendi il termine del processo. Il file pronto per essere inviato e installato sui dispositivi Android si troverà al percorso:
+   `build/app/outputs/flutter-apk/app-release.apk`
+
+### Compilare per iOS (Senza macOS tramite Codemagic)
+Per creare l'app per iPhone/iPad è strettamente necessario l'ambiente Apple (Xcode). Se utilizzi Windows, puoi aggirare il limite usando [Codemagic](https://codemagic.io), un servizio Cloud CI/CD gratuito per la compilazione.
+
+Ecco i passi da seguire da zero:
+
+1. **Prepara il Codice (GitHub):** 
+   - Carica l'intera cartella di questo progetto su un tuo repository (pubblico o privato) su GitHub o GitLab.
+2. **Configura Codemagic:**
+   - Vai su [codemagic.io](https://codemagic.io) e accedi col tuo account GitHub.
+   - Clicca su **"Add application"** (Aggiungi applicazione) e seleziona il tuo repository di CAlcool.
+   - Scegli **Flutter App** come tipo di progetto.
+3. **Impostazioni di Build:**
+   - Nella sezione *Build for platforms*, deseleziona Android e web, lasciando la spunta solo su **iOS**.
+   - Nella sezione *Build arguments*, assicurati che sia selezionata la modalità **Release**.
+4. **Firma dell'App (Code Signing):**
+   - *Nota bene:* Per installare fisicamente l'app su un iPhone reale, Apple richiede un account Sviluppatore. Se non lo hai e vuoi solo testarla sul simulatore di Xcode su un Mac di un amico, seleziona "Simulator" come target per farti generare un pacchetto **.zip** (o **.app**).
+   - Se possiedi un account Apple Developer, carica i tuoi certificati di *Provisioning Profile* nella sezione *Distribution* -> *iOS code signing* per generare un file **.ipa**.
+5. **Avvia la Compilazione:**
+   - Salva le impostazioni cliccando **"Save changes"**.
+   - Clicca sul pulsante in alto a destra **"Start new build"**.
+6. **Scarica il Risultato:**
+   - Codemagic impiegherà alcuni minuti per noleggiare un Mac virtuale e compilare il tuo codice.
+   - Al termine, troverai il file `.ipa` (o il file `.zip` della build) nella sezione *Artifacts* sulla sinistra, pronto per essere scaricato!
 
 ---
 

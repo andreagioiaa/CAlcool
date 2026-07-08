@@ -1,8 +1,13 @@
+import 'dart:io';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../navigation/main_navigation_screen.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/user_profile.dart';
+import '../../data/models/drink.dart';
 import '../../providers/providers.dart';
 import '../dashboard/dashboard_screen.dart';
 
@@ -47,6 +52,56 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
+  Future<void> _importData() async {
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Importazione non supportata su Web.')),
+      );
+      return;
+    }
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/calcool_backup.json');
+
+      if (!await file.exists()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nessun file di backup (calcool_backup.json) trovato nella cartella app.')),
+        );
+        return;
+      }
+
+      final jsonString = await file.readAsString();
+      final data = jsonDecode(jsonString) as Map<String, dynamic>;
+
+      if (data.containsKey('userProfile') && data['userProfile'] != null) {
+        final profile = UserProfile.fromJson(data['userProfile']);
+        await ref.read(userProfileNotifierProvider.notifier).saveProfile(profile);
+      }
+
+      if (data.containsKey('drinks')) {
+        final drinksList = data['drinks'] as List;
+        final drinksNotifier = ref.read(drinksNotifierProvider.notifier);
+        await drinksNotifier.clearDrinks();
+        for (var d in drinksList) {
+          await drinksNotifier.addDrink(Drink.fromJson(d));
+        }
+      }
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Errore importazione: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,6 +143,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.primaryColor,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: _importData,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: AppTheme.neumorphicBox(context, radius: 30),
+                  child: const Center(
+                    child: Text(
+                      'IMPORTA DA BACKUP',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
                       ),
                     ),
                   ),

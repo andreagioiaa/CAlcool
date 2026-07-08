@@ -113,48 +113,71 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final volumeController = TextEditingController(text: preset != null ? preset.volume.toString() : '');
     final abvController = TextEditingController(text: preset != null ? preset.abv.toString() : '');
     final costController = TextEditingController();
+    TimeOfDay selectedTime = TimeOfDay.now();
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        title: Text(preset != null ? 'Conferma Bevanda' : 'Aggiungi Bevanda', style: Theme.of(context).textTheme.titleLarge),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Nome (es. Birra)')),
-              TextField(controller: volumeController, decoration: const InputDecoration(labelText: 'Volume (ml)'), keyboardType: TextInputType.number),
-              TextField(controller: abvController, decoration: const InputDecoration(labelText: 'Gradazione (%)'), keyboardType: TextInputType.number),
-              TextField(controller: costController, decoration: const InputDecoration(labelText: 'Costo (€) (Opzionale)'), keyboardType: TextInputType.number),
-            ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setStateBuilder) => AlertDialog(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          title: Text(preset != null ? 'Conferma Bevanda' : 'Aggiungi Bevanda', style: Theme.of(context).textTheme.titleLarge),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Nome (es. Birra)')),
+                TextField(controller: volumeController, decoration: const InputDecoration(labelText: 'Volume (ml)'), keyboardType: TextInputType.number),
+                TextField(controller: abvController, decoration: const InputDecoration(labelText: 'Gradazione (%)'), keyboardType: TextInputType.number),
+                TextField(controller: costController, decoration: const InputDecoration(labelText: 'Costo (€) (Opzionale)'), keyboardType: TextInputType.number),
+                const SizedBox(height: 20),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Orario consumazione'),
+                  subtitle: Text(selectedTime.format(context)),
+                  trailing: const Icon(Icons.access_time, color: AppTheme.primaryColor),
+                  onTap: () async {
+                    final TimeOfDay? time = await showTimePicker(
+                      context: context,
+                      initialTime: selectedTime,
+                    );
+                    if (time != null) {
+                      setStateBuilder(() => selectedTime = time);
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annulla')),
+            ElevatedButton(
+              onPressed: () {
+                if (nameController.text.isNotEmpty && volumeController.text.isNotEmpty && abvController.text.isNotEmpty) {
+                  final now = DateTime.now();
+                  final consumedAt = DateTime(now.year, now.month, now.day, selectedTime.hour, selectedTime.minute);
+                  
+                  final drink = Drink(
+                    name: nameController.text,
+                    volumeMl: double.parse(volumeController.text.replaceAll(',', '.')),
+                    abvPercentage: double.parse(abvController.text.replaceAll(',', '.')),
+                    consumedAt: consumedAt,
+                    cost: costController.text.isNotEmpty ? double.parse(costController.text.replaceAll(',', '.')) : 0.0,
+                  );
+                  ref.read(drinksNotifierProvider.notifier).addDrink(drink);
+                  Navigator.pop(ctx);
+                }
+              },
+              child: const Text('Salva'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annulla')),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isNotEmpty && volumeController.text.isNotEmpty && abvController.text.isNotEmpty) {
-                final drink = Drink(
-                  name: nameController.text,
-                  volumeMl: double.parse(volumeController.text.replaceAll(',', '.')),
-                  abvPercentage: double.parse(abvController.text.replaceAll(',', '.')),
-                  consumedAt: DateTime.now(),
-                  cost: costController.text.isNotEmpty ? double.parse(costController.text.replaceAll(',', '.')) : 0.0,
-                );
-                ref.read(drinksNotifierProvider.notifier).addDrink(drink);
-                Navigator.pop(ctx);
-              }
-            },
-            child: const Text('Salva'),
-          ),
-        ],
       ),
     );
   }
 
   void _showAddMealDialog() {
     String selectedMeal = 'Snack';
+    TimeOfDay selectedTime = TimeOfDay.now();
     
     showDialog(
       context: context,
@@ -173,11 +196,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 items: ['Snack', 'Full'].map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
-                    child: Text(value == 'Snack' ? 'Spuntino (Copre 1 ora)' : 'Pasto Completo (Copre 3 ore)'),
+                    child: Text(
+                      value == 'Snack' 
+                        ? 'Spuntino (~300kcal, es. snack)' 
+                        : 'Pasto Completo (>600kcal, cena)',
+                      style: const TextStyle(fontSize: 13),
+                    ),
                   );
                 }).toList(),
                 onChanged: (val) {
                   if (val != null) setStateBuilder(() => selectedMeal = val);
+                },
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Orario consumazione'),
+                subtitle: Text(selectedTime.format(context)),
+                trailing: const Icon(Icons.access_time, color: AppTheme.primaryColor),
+                onTap: () async {
+                  final TimeOfDay? time = await showTimePicker(
+                    context: context,
+                    initialTime: selectedTime,
+                  );
+                  if (time != null) {
+                    setStateBuilder(() => selectedTime = time);
+                  }
                 },
               ),
             ],
@@ -186,9 +230,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annulla')),
             ElevatedButton(
               onPressed: () {
+                final now = DateTime.now();
+                final consumedAt = DateTime(now.year, now.month, now.day, selectedTime.hour, selectedTime.minute);
                 final meal = Meal(
                   mealType: selectedMeal,
-                  consumedAt: DateTime.now(),
+                  consumedAt: consumedAt,
                 );
                 ref.read(mealsNotifierProvider.notifier).addMeal(meal);
                 Navigator.pop(ctx);
@@ -222,7 +268,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     timelineEvents.sort((a, b) {
       final dateA = a is Drink ? a.consumedAt : (a as Meal).consumedAt;
       final dateB = b is Drink ? b.consumedAt : (b as Meal).consumedAt;
-      return dateB.compareTo(dateA);
+      // Ordine cronologico crescente (dal più vecchio al più recente nella giornata)
+      return dateA.compareTo(dateB);
     });
 
     return Scaffold(

@@ -6,7 +6,8 @@ class AppTheme {
   static const Color lightShadow = Color(0xFFFFFFFF);
   static const Color darkShadow = Color(0xFFA3B1C6);
   static const Color lightText = Color(0xFF333333);
-  static const Color primaryColor = Color(0xFF4A90E2);
+  static const Color primaryColor = Color(0xFFD97706);
+  static const Color dangerColor = Color(0xFFD32F2F);
 
   // Dark Mode Colors
   static const Color darkBackground = Color(0xFF292D32);

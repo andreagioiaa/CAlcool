@@ -22,7 +22,7 @@ final bacCalculationProvider =
 );
 
 typedef BacCalculationRef = AutoDisposeProviderRef<Map<String, dynamic>>;
-String _$themeModeNotifierHash() => r'bce9d41ba9de86fcca6beb823069d6f93f2a08f3';
+String _$themeModeNotifierHash() => r'c7f2f1420cdffb26223bbac512b0907372605b15';
 
 /// See also [ThemeModeNotifier].
 @ProviderFor(ThemeModeNotifier)
@@ -55,7 +55,7 @@ final userProfileNotifierProvider =
 );
 
 typedef _$UserProfileNotifier = AutoDisposeNotifier<UserProfile?>;
-String _$drinksNotifierHash() => r'2394cad145db5551aa183ffbf3ddb928cf19ada8';
+String _$drinksNotifierHash() => r'aa57bedcfbbe5454a8f57f9c55717095d8d9b69b';
 
 /// See also [DrinksNotifier].
 @ProviderFor(DrinksNotifier)
@@ -71,7 +71,7 @@ final drinksNotifierProvider =
 );
 
 typedef _$DrinksNotifier = AutoDisposeNotifier<List<Drink>>;
-String _$mealsNotifierHash() => r'4f92b0c77b307170f3971e51f38e376552f5acf4';
+String _$mealsNotifierHash() => r'4377db5a2c0b4e7c2c62b435ae05046f6982ae8e';
 
 /// See also [MealsNotifier].
 @ProviderFor(MealsNotifier)
@@ -87,5 +87,22 @@ final mealsNotifierProvider =
 );
 
 typedef _$MealsNotifier = AutoDisposeNotifier<List<Meal>>;
+String _$drinkTemplatesNotifierHash() =>
+    r'e5b791e10a95f15396fb99749b665a8f055ce6d7';
+
+/// See also [DrinkTemplatesNotifier].
+@ProviderFor(DrinkTemplatesNotifier)
+final drinkTemplatesNotifierProvider = AutoDisposeNotifierProvider<
+    DrinkTemplatesNotifier, List<DrinkTemplate>>.internal(
+  DrinkTemplatesNotifier.new,
+  name: r'drinkTemplatesNotifierProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$drinkTemplatesNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$DrinkTemplatesNotifier = AutoDisposeNotifier<List<DrinkTemplate>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

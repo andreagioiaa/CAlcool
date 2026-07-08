@@ -1,15 +1,13 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/providers.dart';
-import '../../data/models/user_profile.dart';
-import '../../data/models/drink.dart';
+import '../../core/utils/backup_service.dart';
+import '../../core/utils/notification_service.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'edit_profile_screen.dart';
+import '../drinks/drink_library_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -22,84 +20,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _exportData() async {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Esportazione non supportata su Web. Usa un dispositivo iOS/Android.')),
+        const SnackBar(content: Text('Esportazione non supportata su Web.')),
       );
       return;
     }
-    try {
-      final userBox = Hive.box<UserProfile>('userBox');
-      final drinksBox = Hive.box<Drink>('drinksBox');
-
-      final user = userBox.get('currentUser');
-      final drinks = drinksBox.values.toList();
-
-      final data = {
-        'user': user?.toJson(),
-        'drinks': drinks.map((d) => d.toJson()).toList(),
-      };
-
-      final jsonStr = jsonEncode(data);
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/calcool_backup.json');
-      await file.writeAsString(jsonStr);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Dati esportati con successo in: ${file.path}')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Errore esportazione: $e')),
-      );
-    }
+    await BackupService.exportData(context);
   }
 
   Future<void> _importData() async {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Importazione non supportata su Web. Usa un dispositivo iOS/Android.')),
+        const SnackBar(content: Text('Importazione non supportata su Web.')),
       );
       return;
     }
-    try {
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/calcool_backup.json');
-
-      if (!await file.exists()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nessun file di backup trovato (calcool_backup.json).')),
-        );
-        return;
-      }
-
-      final jsonString = await file.readAsString();
-      final data = jsonDecode(jsonString) as Map<String, dynamic>;
-
-      if (data.containsKey('userProfile') && data['userProfile'] != null) {
-        final profile = UserProfile.fromJson(data['userProfile']);
-        await ref.read(userProfileNotifierProvider.notifier).saveProfile(profile);
-      }
-
-      if (data.containsKey('drinks')) {
-        final drinksList = data['drinks'] as List;
-        final drinksNotifier = ref.read(drinksNotifierProvider.notifier);
-        await drinksNotifier.clearDrinks();
-        for (var d in drinksList) {
-          await drinksNotifier.addDrink(Drink.fromJson(d));
-        }
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Dati importati con successo')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Errore importazione: $e')),
-        );
-      }
-    }
+    await BackupService.importData(context, ref);
   }
 
   @override
@@ -124,6 +59,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 icon: Icons.person,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen())),
               ),
+
               const SizedBox(height: 20),
               _buildSettingItem(
                 context,
@@ -134,6 +70,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onChanged: (val) => ref.read(themeModeNotifierProvider.notifier).toggle(),
                   activeThumbColor: AppTheme.primaryColor,
                 ),
+              ),
+              const SizedBox(height: 20),
+              ValueListenableBuilder(
+                valueListenable: Hive.box('settingsBox').listenable(keys: ['notificationsEnabled']),
+                builder: (context, box, widget) {
+                  final notificationsEnabled = box.get('notificationsEnabled', defaultValue: false);
+                  return _buildSettingItem(
+                    context,
+                    title: 'Notifiche (Sotto 0.5 BAC)',
+                    icon: Icons.notifications_active,
+                    trailing: Switch(
+                      value: notificationsEnabled,
+                      onChanged: (val) async {
+                        if (val) {
+                          final granted = await NotificationService().requestPermissions();
+                          box.put('notificationsEnabled', granted);
+                          if (!granted && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Permessi per le notifiche non concessi.')),
+                            );
+                          }
+                        } else {
+                          box.put('notificationsEnabled', false);
+                          await NotificationService().cancelSobrietyNotification();
+                        }
+                      },
+                      activeThumbColor: AppTheme.primaryColor,
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 20),
               _buildSettingItem(

@@ -6,23 +6,7 @@ import '../../data/models/drink.dart';
 import '../../data/models/meal.dart';
 import '../settings/settings_screen.dart';
 
-class DrinkPreset {
-  final String name;
-  final double volume;
-  final double abv;
-  final IconData icon;
-
-  const DrinkPreset(this.name, this.volume, this.abv, this.icon);
-}
-
-const List<DrinkPreset> drinkPresets = [
-  DrinkPreset('Birra Piccola', 330, 5.0, Icons.sports_bar),
-  DrinkPreset('Birra Media', 500, 5.0, Icons.sports_bar),
-  DrinkPreset('Calice Vino', 150, 12.0, Icons.wine_bar),
-  DrinkPreset('Shot', 40, 40.0, Icons.local_drink),
-  DrinkPreset('Cocktail Soft', 200, 15.0, Icons.local_bar),
-  DrinkPreset('Cocktail Strong', 200, 30.0, Icons.local_bar),
-];
+import '../../data/models/drink_template.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -32,7 +16,20 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'birra': return Icons.sports_bar;
+      case 'vino': return Icons.wine_bar;
+      case 'shot': return Icons.local_drink;
+      case 'cocktail': return Icons.local_bar;
+      default: return Icons.local_cafe;
+    }
+  }
+
   void _showPresetSelectionDialog() {
+    String selectedCategory = 'Preferiti';
+    final categories = ['Preferiti', 'Cocktail', 'Birra', 'Vino', 'Shot', 'I miei drink'];
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -40,78 +37,139 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 24.0,
-          right: 24.0,
-          top: 24.0,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24.0,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Scegli Bevanda', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 15,
-                runSpacing: 15,
-                alignment: WrapAlignment.center,
-                children: drinkPresets.map((preset) => _buildPresetButton(preset, ctx)).toList(),
-              ),
-              const SizedBox(height: 20),
-              GestureDetector(
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _showAddDrinkDialog();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  decoration: AppTheme.neumorphicBox(context, radius: 20),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.edit, color: AppTheme.primaryColor),
-                      SizedBox(width: 10),
-                      Text('Personalizzata', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
-                    ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          final templates = ref.read(drinkTemplatesNotifierProvider);
+          
+          List<DrinkTemplate> filtered = templates;
+          if (selectedCategory == 'Preferiti') {
+            filtered = templates.where((t) => t.rating >= 4).toList();
+            if (filtered.isEmpty) {
+              // Fallback to top 6 if no favorites
+              filtered = templates.take(6).toList();
+            }
+          } else if (selectedCategory == 'I miei drink') {
+            filtered = templates.where((t) => !t.isBuiltIn).toList();
+          } else {
+            filtered = templates.where((t) => t.category.toLowerCase() == selectedCategory.toLowerCase()).toList();
+          }
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 24.0,
+              right: 24.0,
+              top: 24.0,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24.0,
+            ),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.7,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Scegli Bevanda', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 50,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: categories.length,
+                      itemBuilder: (ctx, index) {
+                        final cat = categories[index];
+                        final isSelected = selectedCategory == cat;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 10, bottom: 10),
+                          child: GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                selectedCategory = cat;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                              decoration: isSelected
+                                  ? BoxDecoration(color: AppTheme.primaryColor, borderRadius: BorderRadius.circular(20))
+                                  : AppTheme.neumorphicBox(context, radius: 20),
+                              child: Center(
+                                child: Text(
+                                  cat,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Wrap(
+                        spacing: 15,
+                        runSpacing: 15,
+                        alignment: WrapAlignment.center,
+                        children: filtered.map((preset) => _buildPresetButton(preset, ctx)).toList(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _showAddDrinkDialog();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      decoration: AppTheme.neumorphicBox(context, radius: 20),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.edit, color: AppTheme.primaryColor),
+                          SizedBox(width: 10),
+                          Text('Personalizzata', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        }
       ),
     );
   }
 
-  Widget _buildPresetButton(DrinkPreset preset, BuildContext ctx) {
+  Widget _buildPresetButton(DrinkTemplate preset, BuildContext ctx) {
     return GestureDetector(
       onTap: () {
         Navigator.pop(ctx);
         _showAddDrinkDialog(preset: preset);
       },
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.4,
+        width: MediaQuery.of(context).size.width * 0.38,
         padding: const EdgeInsets.all(15),
         decoration: AppTheme.neumorphicBox(context, radius: 15),
         child: Column(
           children: [
-            Icon(preset.icon, color: AppTheme.primaryColor, size: 30),
+            Icon(_getCategoryIcon(preset.category), color: AppTheme.primaryColor, size: 30),
             const SizedBox(height: 10),
-            Text(preset.name, style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-            Text('${preset.volume.toInt()}ml • ${preset.abv}%', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(preset.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
+            Text('${preset.volumeMl.toInt()}ml • ${preset.abvPercentage}%', style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ),
       ),
     );
   }
 
-  void _showAddDrinkDialog({DrinkPreset? preset}) {
+  void _showAddDrinkDialog({DrinkTemplate? preset}) {
     final nameController = TextEditingController(text: preset?.name ?? '');
-    final volumeController = TextEditingController(text: preset != null ? preset.volume.toString() : '');
-    final abvController = TextEditingController(text: preset != null ? preset.abv.toString() : '');
+    final volumeController = TextEditingController(text: preset != null ? preset.volumeMl.toString() : '');
+    final abvController = TextEditingController(text: preset != null ? preset.abvPercentage.toString() : '');
     final costController = TextEditingController();
     TimeOfDay selectedTime = TimeOfDay.now();
 
@@ -276,10 +334,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(
-          'Ciao ${user?.name ?? ''}',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+        centerTitle: true,
+        title: Image.asset(
+          'assets/logo_CAlcool.png',
+          height: 40,
+          fit: BoxFit.contain,
         ),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: Center(
+            child: Text(
+              'Ciao ${user?.name ?? ''}',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        leadingWidth: 100,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: AppTheme.primaryColor),
@@ -306,7 +377,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       style: TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
-                        color: bac > 0.5 ? Colors.red : AppTheme.primaryColor,
+                        color: bac > 0.5 ? AppTheme.dangerColor : AppTheme.primaryColor,
                       ),
                     ),
                   ],

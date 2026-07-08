@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../statistics/statistics_screen.dart';
+import '../drinks/drink_library_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -15,6 +16,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   
   final List<Widget> _screens = [
     const DashboardScreen(),
+    const DrinkLibraryScreen(),
     const StatisticsScreen(),
   ];
 
@@ -49,6 +51,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
               label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.local_bar),
+              label: 'Drink',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.pie_chart),

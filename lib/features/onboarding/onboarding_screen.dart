@@ -1,15 +1,11 @@
-import 'dart:io';
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../navigation/main_navigation_screen.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/user_profile.dart';
-import '../../data/models/drink.dart';
 import '../../providers/providers.dart';
-import '../dashboard/dashboard_screen.dart';
+import '../../core/utils/backup_service.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -59,46 +55,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       );
       return;
     }
-    try {
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/calcool_backup.json');
-
-      if (!await file.exists()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nessun file di backup (calcool_backup.json) trovato nella cartella app.')),
-        );
-        return;
-      }
-
-      final jsonString = await file.readAsString();
-      final data = jsonDecode(jsonString) as Map<String, dynamic>;
-
-      if (data.containsKey('userProfile') && data['userProfile'] != null) {
-        final profile = UserProfile.fromJson(data['userProfile']);
-        await ref.read(userProfileNotifierProvider.notifier).saveProfile(profile);
-      }
-
-      if (data.containsKey('drinks')) {
-        final drinksList = data['drinks'] as List;
-        final drinksNotifier = ref.read(drinksNotifierProvider.notifier);
-        await drinksNotifier.clearDrinks();
-        for (var d in drinksList) {
-          await drinksNotifier.addDrink(Drink.fromJson(d));
-        }
-      }
-
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Errore importazione: $e')),
-        );
-      }
+    final profileImported = await BackupService.importData(context, ref);
+    if (profileImported && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+      );
     }
   }
 

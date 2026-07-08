@@ -1,0 +1,122 @@
+[
+  {
+    "name": "Gin Tonic",
+    "volumeMl": 170.0,
+    "abvPercentage": 9.4
+  },
+  {
+    "name": "Negroni",
+    "volumeMl": 90.0,
+    "abvPercentage": 26.7
+  },
+  {
+    "name": "Mojito",
+    "volumeMl": 270.0,
+    "abvPercentage": 8.9
+  },
+  {
+    "name": "Margarita",
+    "volumeMl": 90.0,
+    "abvPercentage": 26.7
+  },
+  {
+    "name": "Martini",
+    "volumeMl": 90.0,
+    "abvPercentage": 23.9
+  },
+  {
+    "name": "Aperol Spritz",
+    "volumeMl": 370.0,
+    "abvPercentage": 7.6
+  },
+  {
+    "name": "Cuba Libre",
+    "volumeMl": 200.0,
+    "abvPercentage": 12.0
+  },
+  {
+    "name": "Moscow Mule",
+    "volumeMl": 360.0,
+    "abvPercentage": 6.7
+  },
+  {
+    "name": "Whiskey Sour",
+    "volumeMl": 127.5,
+    "abvPercentage": 18.8
+  },
+  {
+    "name": "Daiquiri",
+    "volumeMl": 70.0,
+    "abvPercentage": 25.7
+  },
+  {
+    "name": "Manhattan",
+    "volumeMl": 218.5,
+    "abvPercentage": 15.3
+  },
+  {
+    "name": "Old Fashioned",
+    "volumeMl": 78.0,
+    "abvPercentage": 23.1
+  },
+  {
+    "name": "Pina Colada",
+    "volumeMl": 180.0,
+    "abvPercentage": 20.0
+  },
+  {
+    "name": "Bloody Mary",
+    "volumeMl": 228.5,
+    "abvPercentage": 7.9
+  },
+  {
+    "name": "Americano",
+    "volumeMl": 60.0,
+    "abvPercentage": 20.0
+  },
+  {
+    "name": "Caipirinha",
+    "volumeMl": 115.0,
+    "abvPercentage": 26.1
+  },
+  {
+    "name": "Irish Coffee",
+    "volumeMl": 305.0,
+    "abvPercentage": 5.9
+  },
+  {
+    "name": "Long Island Iced Tea",
+    "volumeMl": 61.0,
+    "abvPercentage": 39.3
+  },
+  {
+    "name": "Tequila Sunrise",
+    "volumeMl": 165.0,
+    "abvPercentage": 14.5
+  },
+  {
+    "name": "Espresso Martini",
+    "volumeMl": 61.0,
+    "abvPercentage": 36.1
+  },
+  {
+    "name": "Cosmopolitan",
+    "volumeMl": 60.0,
+    "abvPercentage": 30.0
+  },
+  {
+    "name": "White Russian",
+    "volumeMl": 120.0,
+    "abvPercentage": 25.0
+  },
+  {
+    "name": "Black Russian",
+    "volumeMl": 67.5,
+    "abvPercentage": 33.3
+  },
+  {
+    "name": "Sex on the Beach",
+    "volumeMl": 232.5,
+    "abvPercentage": 6.6
+  }
+]

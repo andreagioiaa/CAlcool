@@ -40,17 +40,26 @@ class BackupService {
       };
 
       final jsonStr = jsonEncode(data);
-      final directory = await getTemporaryDirectory();
-      final file = File('${directory.path}/calcool_backup.json');
+      
+      String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+      
+      if (selectedDirectory == null) {
+        return; // L'utente ha annullato la selezione
+      }
+
+      settingsBox.put('lastExportPath', selectedDirectory);
+      
+      final file = File('$selectedDirectory/calcool_backup.json');
       await file.writeAsString(jsonStr);
 
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          text: 'Backup Dati CAlcool',
-          subject: 'CAlcool Backup',
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Backup salvato in:\n${file.path}'),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -62,9 +71,12 @@ class BackupService {
 
   static Future<bool> importData(BuildContext context, WidgetRef ref) async {
     try {
+      final settingsBox = Hive.box('settingsBox');
+      final lastExportPath = settingsBox.get('lastExportPath') as String?;
+
       final FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
+        type: FileType.any,
+        initialDirectory: lastExportPath,
       );
 
       if (result == null || result.files.single.path == null) {

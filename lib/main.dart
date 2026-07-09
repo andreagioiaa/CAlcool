@@ -53,9 +53,11 @@ class _CAlcoolAppState extends ConsumerState<CAlcoolApp> {
     // Ascolta i cambiamenti del BAC per programmare le notifiche
     ref.listen(bacCalculationProvider, (previous, next) {
       final timeTo05 = next['timeTo05'] as DateTime?;
+      final timeTo00 = next['timeTo00'] as DateTime?;
       final bac = next['bac'] as double;
       final settingsBox = Hive.box('settingsBox');
       final notificationsEnabled = settingsBox.get('notificationsEnabled', defaultValue: false);
+      final ongoingNotificationsEnabled = settingsBox.get('ongoingNotificationsEnabled', defaultValue: false);
       
       if (notificationsEnabled) {
         if (bac > 0.5 && timeTo05 != null && timeTo05.isAfter(DateTime.now())) {
@@ -63,6 +65,14 @@ class _CAlcoolAppState extends ConsumerState<CAlcoolApp> {
         } else {
           NotificationService().cancelSobrietyNotification();
         }
+      } else {
+        NotificationService().cancelSobrietyNotification();
+      }
+
+      if (ongoingNotificationsEnabled) {
+        NotificationService().showOngoingBacNotification(bac, timeTo05, timeTo00);
+      } else {
+        NotificationService().cancelOngoingBacNotification();
       }
     });
     

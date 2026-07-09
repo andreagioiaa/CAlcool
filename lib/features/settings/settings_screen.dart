@@ -37,6 +37,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await BackupService.importData(context, ref);
   }
 
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4.0, bottom: 4.0),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeModeNotifierProvider);
@@ -48,19 +63,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title: const Text('Impostazioni'),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // --- SEZIONE PROFILO ---
+              _buildSectionHeader('PROFILO'),
               _buildSettingItem(
                 context,
                 title: 'Modifica Profilo',
                 icon: Icons.person,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen())),
               ),
-
-              const SizedBox(height: 20),
+              
+              const SizedBox(height: 25),
+              
+              // --- SEZIONE PERSONALIZZAZIONE ---
+              _buildSectionHeader('PERSONALIZZAZIONE'),
               _buildSettingItem(
                 context,
                 title: 'Tema Scuro',
@@ -71,7 +91,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   activeThumbColor: AppTheme.primaryColor,
                 ),
               ),
-              const SizedBox(height: 20),
+              
+              const SizedBox(height: 25),
+              
+              // --- SEZIONE NOTIFICHE ---
+              _buildSectionHeader('NOTIFICHE'),
               ValueListenableBuilder(
                 valueListenable: Hive.box('settingsBox').listenable(keys: ['notificationsEnabled']),
                 builder: (context, box, widget) {
@@ -101,21 +125,63 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   );
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
+              ValueListenableBuilder(
+                valueListenable: Hive.box('settingsBox').listenable(keys: ['ongoingNotificationsEnabled']),
+                builder: (context, box, widget) {
+                  final ongoingEnabled = box.get('ongoingNotificationsEnabled', defaultValue: false);
+                  return _buildSettingItem(
+                    context,
+                    title: 'Notifica persistente tasso BAC',
+                    icon: Icons.assignment,
+                    trailing: Switch(
+                      value: ongoingEnabled,
+                      onChanged: (val) async {
+                        if (val) {
+                          final granted = await NotificationService().requestPermissions();
+                          box.put('ongoingNotificationsEnabled', granted);
+                          if (granted) {
+                            final bacData = ref.read(bacCalculationProvider);
+                            final bac = bacData['bac'] as double;
+                            final timeTo05 = bacData['timeTo05'] as DateTime?;
+                            final timeTo00 = bacData['timeTo00'] as DateTime?;
+                            NotificationService().showOngoingBacNotification(bac, timeTo05, timeTo00);
+                          } else if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Permessi per le notifiche non concessi.')),
+                            );
+                          }
+                        } else {
+                          box.put('ongoingNotificationsEnabled', false);
+                          await NotificationService().cancelOngoingBacNotification();
+                        }
+                      },
+                      activeThumbColor: AppTheme.primaryColor,
+                    ),
+                  );
+                },
+              ),
+              
+              const SizedBox(height: 25),
+              
+              // --- SEZIONE GESTIONE DATI ---
+              _buildSectionHeader('GESTIONE DATI'),
               _buildSettingItem(
                 context,
                 title: 'Esporta Dati (JSON)',
                 icon: Icons.upload_file,
                 onTap: _exportData,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
               _buildSettingItem(
                 context,
                 title: 'Importa Dati (JSON)',
                 icon: Icons.file_download,
                 onTap: _importData,
               ),
-              const Spacer(),
+              
+              const SizedBox(height: 30),
+              
               const Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Column(

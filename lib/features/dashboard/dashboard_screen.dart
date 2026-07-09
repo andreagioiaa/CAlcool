@@ -342,7 +342,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         leading: Padding(
           padding: const EdgeInsets.only(left: 16.0),
-          child: Center(
+          child: Align(
+            alignment: Alignment.centerLeft,
             child: Text(
               'Ciao ${user?.name ?? ''}',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -350,7 +351,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
         ),
-        leadingWidth: 100,
+        leadingWidth: 160,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: AppTheme.primaryColor),
@@ -424,24 +425,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     final date = isDrink ? (event as Drink).consumedAt : (event as Meal).consumedAt;
                     final timeStr = '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
                     
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 15),
-                      padding: const EdgeInsets.all(15),
-                      decoration: AppTheme.neumorphicBox(context, radius: 15),
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
                       child: Row(
                         children: [
-                          Icon(isDrink ? Icons.local_bar : Icons.restaurant, color: AppTheme.primaryColor),
+                          Icon(
+                            isDrink ? Icons.local_bar : Icons.restaurant, 
+                            color: Colors.grey.shade600, 
+                            size: 20
+                          ),
                           const SizedBox(width: 15),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(isDrink ? (event as Drink).name : ((event as Meal).mealType == 'Full' ? 'Pasto Completo' : 'Spuntino'), style: const TextStyle(fontWeight: FontWeight.bold)),
-                                if (isDrink) Text('${(event as Drink).volumeMl.toInt()}ml - ${(event as Drink).abvPercentage}% ABV', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                Text(
+                                  isDrink ? (event as Drink).name : ((event as Meal).mealType == 'Full' ? 'Pasto Completo' : 'Spuntino'), 
+                                  style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)
+                                ),
+                                if (isDrink) 
+                                  Text(
+                                    '${(event as Drink).volumeMl.toInt()}ml - ${(event as Drink).abvPercentage}% ABV', 
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey)
+                                  ),
                               ],
                             ),
                           ),
-                          Text(timeStr, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                          Text(timeStr, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
                         ],
                       ),
                     );

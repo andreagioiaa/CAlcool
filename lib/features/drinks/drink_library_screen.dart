@@ -160,6 +160,101 @@ class _DrinkLibraryScreenState extends ConsumerState<DrinkLibraryScreen> {
     );
   }
 
+  void _showEditOrDeleteDialog(DrinkTemplate t) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        title: Text(t.name, style: Theme.of(context).textTheme.titleLarge),
+        content: const Text('Cosa desideri fare con questo drink personalizzato?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _showEditDrinkTemplateDialog(t);
+            },
+            child: const Text('Modifica', style: TextStyle(color: AppTheme.primaryColor)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _showConfirmDeleteTemplateDialog(t);
+            },
+            child: const Text('Elimina', style: TextStyle(color: Colors.red)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annulla', style: TextStyle(color: Colors.grey)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditDrinkTemplateDialog(DrinkTemplate t) {
+    final nameController = TextEditingController(text: t.name);
+    final volumeController = TextEditingController(text: t.volumeMl.toStringAsFixed(0));
+    final abvController = TextEditingController(text: t.abvPercentage.toStringAsFixed(1));
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        title: const Text('Modifica Drink'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Nome')),
+              TextField(controller: volumeController, decoration: const InputDecoration(labelText: 'Volume (ml)'), keyboardType: TextInputType.number),
+              TextField(controller: abvController, decoration: const InputDecoration(labelText: 'Gradazione (%)'), keyboardType: TextInputType.number),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annulla', style: TextStyle(color: Colors.grey))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor, foregroundColor: Colors.white),
+            onPressed: () {
+              final vol = double.tryParse(volumeController.text.replaceAll(',', '.')) ?? 0;
+              final abv = double.tryParse(abvController.text.replaceAll(',', '.')) ?? 0;
+              if (nameController.text.isNotEmpty && vol > 0 && abv > 0) {
+                t.name = nameController.text;
+                t.volumeMl = vol;
+                t.abvPercentage = abv;
+                ref.read(drinkTemplatesNotifierProvider.notifier).updateTemplate(t);
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Salva'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showConfirmDeleteTemplateDialog(DrinkTemplate t) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        title: const Text('Elimina Drink'),
+        content: Text('Sei sicuro di voler eliminare permanentemente "${t.name}" dalla tua libreria?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annulla', style: TextStyle(color: Colors.grey))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () {
+              ref.read(drinkTemplatesNotifierProvider.notifier).removeTemplate(t);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Elimina'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAddDrinkTemplateDialog() {
     final nameController = TextEditingController();
     final volumeController = TextEditingController();
@@ -352,6 +447,15 @@ class _DrinkLibraryScreenState extends ConsumerState<DrinkLibraryScreen> {
                     ),
                     trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                     onTap: () => _showDrinkDetails(t),
+                    onLongPress: () {
+                      if (t.isBuiltIn) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('I drink predefiniti non possono essere modificati o eliminati.')),
+                        );
+                        return;
+                      }
+                      _showEditOrDeleteDialog(t);
+                    },
                   ),
                 );
               },

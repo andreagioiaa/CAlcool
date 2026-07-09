@@ -17,7 +17,7 @@ class NotificationService {
     tz.initializeTimeZones();
 
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/launcher_icon');
 
     final DarwinInitializationSettings initializationSettingsDarwin =
         DarwinInitializationSettings(
@@ -85,5 +85,54 @@ class NotificationService {
   Future<void> cancelSobrietyNotification() async {
     if (!_isInitialized) await init();
     await _flutterLocalNotificationsPlugin.cancel(id: 0);
+  }
+
+  Future<void> showOngoingBacNotification(double bac, DateTime? timeTo05, DateTime? timeTo00) async {
+    if (!_isInitialized) await init();
+    
+    if (bac <= 0.0) {
+      await cancelOngoingBacNotification();
+      return;
+    }
+
+    String title = 'CAlcool: Livello Alcolico';
+    String body = '';
+    
+    if (bac > 0.5) {
+      final timeStr = timeTo05 != null ? '${timeTo05.hour.toString().padLeft(2, '0')}:${timeTo05.minute.toString().padLeft(2, '0')}' : '--:--';
+      body = 'BAC: ${bac.toStringAsFixed(3)} g/l | Rientro sotto 0.5 stimato alle $timeStr';
+    } else {
+      final timeStr = timeTo00 != null ? '${timeTo00.hour.toString().padLeft(2, '0')}:${timeTo00.minute.toString().padLeft(2, '0')}' : '--:--';
+      body = 'BAC: ${bac.toStringAsFixed(3)} g/l | Smaltimento totale alle $timeStr';
+    }
+
+    await _flutterLocalNotificationsPlugin.show(
+      id: 1, // Ongoing notification ID
+      title: title,
+      body: body,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'ongoing_bac_channel_id',
+          'Tasso Alcolico Attuale',
+          channelDescription: 'Mostra il tasso alcolico attuale e il tempo stimato di rientro',
+          importance: Importance.low,
+          priority: Priority.low,
+          ongoing: true,
+          autoCancel: false,
+          showWhen: false,
+          icon: '@mipmap/launcher_icon',
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: false,
+        )
+      )
+    );
+  }
+
+  Future<void> cancelOngoingBacNotification() async {
+    if (!_isInitialized) await init();
+    await _flutterLocalNotificationsPlugin.cancel(id: 1);
   }
 }

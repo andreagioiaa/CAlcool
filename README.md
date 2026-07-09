@@ -46,18 +46,21 @@ CAlcool è un'applicazione mobile sviluppata in Flutter per il calcolo algoritmi
 ## 🛠️ Come Compilare l'App (Build)
 
 ### Compilare per Android (.apk)
-Per generare il file di installazione per Android, è sufficiente utilizzare gli strumenti locali da riga di comando se si ha installato l'SDK di Flutter:
+Per generare il file di installazione per Android in modo semplice:
 
-1. Apri il terminale nella cartella del progetto (`CAlcool`).
-2. Esegui il comando:
+- **Metodo Rapido (Windows):** Fai doppio clic sul file `build_apk.bat` situato nella cartella principale del progetto. Questo script eseguirà la build e aprirà in automatico la cartella contenente l'APK al termine.
+- **Metodo Manuale:** Apri il terminale nella cartella del progetto (`CAlcool`) ed esegui:
    ```bash
    flutter build apk --release
    ```
-3. Attendi il termine del processo. Il file pronto per essere inviato e installato sui dispositivi Android si troverà al percorso:
-   `build/app/outputs/flutter-apk/app-release.apk`
+Al termine, il file pronto per l'installazione si troverà al percorso:
+`build/app/outputs/flutter-apk/app-release.apk`
 
-### Compilare per iOS (Senza macOS tramite Codemagic)
-Per creare l'app per iPhone/iPad è strettamente necessario l'ambiente Apple (Xcode). Se utilizzi Windows, puoi aggirare il limite usando [Codemagic](https://codemagic.io), un servizio Cloud CI/CD gratuito per la compilazione.
+### Compilare per iOS (Senza macOS o dispositivi Apple tramite Codemagic)
+Per creare l'app per iPhone/iPad è solitamente necessario un computer Mac con Xcode. Se utilizzi Windows, puoi aggirare questa limitazione usando [Codemagic](https://codemagic.io), un servizio Cloud CI/CD che compila il codice per te su server macOS remoti.
+
+> [!TIP]
+> **Nessun dispositivo Apple richiesto:** Non hai bisogno di possedere un Mac o un iPhone per effettuare la build su Codemagic. Puoi compilare il progetto nel cloud e inviare direttamente il pacchetto al tuo amico per farglielo installare sul suo dispositivo.
 
 Ecco i passi da seguire da zero:
 
@@ -72,7 +75,7 @@ Ecco i passi da seguire da zero:
    - Nella sezione *Build arguments*, assicurati che sia selezionata la modalità **Release**.
 4. **Firma dell'App (Code Signing):**
    - *Nota bene:* Per installare fisicamente l'app su un iPhone reale, Apple richiede un account Sviluppatore. Se non lo hai e vuoi solo testarla sul simulatore di Xcode su un Mac di un amico, seleziona "Simulator" come target per farti generare un pacchetto **.zip** (o **.app**).
-   - Se possiedi un account Apple Developer, carica i tuoi certificati di *Provisioning Profile* nella sezione *Distribution* -> *iOS code signing* per generare un file **.ipa**.
+   - Se possiedi un account Apple Developer (anche di un amico), carica i certificati di *Provisioning Profile* nella sezione *Distribution* -> *iOS code signing* per generare un file **.ipa** installabile.
 5. **Avvia la Compilazione:**
    - Salva le impostazioni cliccando **"Save changes"**.
    - Clicca sul pulsante in alto a destra **"Start new build"**.

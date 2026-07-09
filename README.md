@@ -46,8 +46,9 @@ CAlcool è un'applicazione mobile sviluppata in Flutter per il calcolo algoritmi
 ## 🛠️ Come Compilare l'App (Build)
 
 ### Compilare per Android (.apk)
-Per generare il file di installazione per Android in modo semplice:
+Puoi compilare l'app per Android in due modi:
 
+#### 1. In locale sul tuo PC (Richiede l'SDK di Flutter installato)
 - **Metodo Rapido (Windows):** Fai doppio clic sul file `build_apk.bat` situato nella cartella principale del progetto. Questo script eseguirà la build e aprirà in automatico la cartella contenente l'APK al termine.
 - **Metodo Manuale:** Apri il terminale nella cartella del progetto (`CAlcool`) ed esegui:
    ```bash
@@ -55,6 +56,13 @@ Per generare il file di installazione per Android in modo semplice:
    ```
 Al termine, il file pronto per l'installazione si troverà al percorso:
 `build/app/outputs/flutter-apk/app-release.apk`
+
+#### 2. Nel Cloud tramite Codemagic (Senza installare nulla sul PC)
+Se non hai l'ambiente di sviluppo o l'SDK di Flutter installato sul tuo computer, puoi compilare l'APK da qualsiasi browser:
+1. Collega il tuo repository GitHub a [Codemagic](https://codemagic.io).
+2. Nelle impostazioni di Build, sotto la voce *Build for platforms*, seleziona **Android**.
+3. Assicurati che in *Android build format* sia selezionato **APK** (anziché App Bundle, così da generare il file installabile direttamente) e che sia in modalità **Release**.
+4. Avvia la build cliccando su **"Start new build"** e, al termine, scarica il file `.apk` direttamente dalla scheda degli *Artifacts*.
 
 ### Compilare per iOS (Senza macOS o dispositivi Apple tramite Codemagic)
 Per creare l'app per iPhone/iPad è solitamente necessario un computer Mac con Xcode. Se utilizzi Windows, puoi aggirare questa limitazione usando [Codemagic](https://codemagic.io), un servizio Cloud CI/CD che compila il codice per te su server macOS remoti.

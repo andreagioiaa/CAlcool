@@ -2,6 +2,8 @@
 #
 # - Pull request: compila e allega l'APK come artifact (verifica della build).
 # - Tag "v*" (es. v1.0.0): compila e pubblica la Release con CAlcool.apk allegato.
+# - Avvio manuale (Actions → Build e Release → Run workflow) con "version" (es. v1.0.0):
+#   compila main e pubblica la Release creando il tag su quel commit.
 #   Il link https://github.com/andreagioiaa/CAlcool/releases/latest/download/CAlcool.apk
 #   punta sempre all'ultima versione.
 #
@@ -16,6 +18,11 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versione da pubblicare, es. v1.0.0 (vuoto = solo build)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -71,11 +78,13 @@ jobs:
           retention-days: 7
 
       - name: Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.version != ''
         uses: softprops/action-gh-release@v2
         with:
           files: CAlcool.apk
-          name: CAlcool ${{ github.ref_name }}
+          tag_name: ${{ inputs.version || github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          name: CAlcool ${{ inputs.version || github.ref_name }}
           generate_release_notes: true
           body: |
             Installer per Android: scarica **CAlcool.apk** dal telefono e aprilo.
